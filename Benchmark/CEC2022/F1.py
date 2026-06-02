@@ -1,4 +1,4 @@
-from Benchmark.Functions.__Function import Function
+from Benchmark.__Function import Function
 from opfunu.cec_based.cec2017 import *
 import numpy as np
 

@@ -7,30 +7,29 @@ import importlib
 from matplotlib import pyplot as plt
 from mealpy import ABC, GA, DE, BBO, GWO, PSO, FPA, SHADE, SMA, WarSO, WOA, HS, EHO, HHO, SCA, SA, NRO, ASO, ES
 
-from Algorithm.MealpyCce import MealpyCCE
-from Algorithm.NIADE import NIADE
-from Algorithm.NOAH import Noah
-from Algorithm.SequoiaOA import SequoiaOA
-from Algorithm.DBO import DBO
-from Algorithm.CGO import CGO
-from Algorithm.BKA import BKA
-from Algorithm.DOA import DOA
-from Algorithm.CCCO import CCCO
+from Algorithms.NIADE import NIADE
+from Algorithms.NOAH import Noah
+from Algorithms.SequoiaOA import SequoiaOA
+from Algorithms.DBO import DBO
+from Algorithms.CGO import CGO
+from Algorithms.BKA import BKA
+from Algorithms.DOA import DOA
+from Algorithms.CCCO import CCCO
+
 
 def get_functions(class_name):
     fn_list = []
     if 'CEC2017' == class_name:
         n = 29
-
-        for n in range(18, 1 + n):
-            module_name = f"Benchmark.Publication.CEC2017.F{n}"
+        for n in range(1, 1 + n):
+            module_name = f"Benchmark.CEC2017.F{n}"
             class_name = f"F{n}"
             module = importlib.import_module(module_name)
             cls = getattr(module, class_name)
             fn_list.append(cls)
     elif 'CEC2020RW' == class_name:
         n = 50
-        lrange = list(range(28, 1 + n))
+        lrange = list(range(1, 1 + n))
         lrange.remove(40)
         lrange.remove(41)
         lrange.remove(42)
@@ -38,7 +37,7 @@ def get_functions(class_name):
         lrange.remove(44)
 
         for n in lrange:
-            module_name = f"Benchmark.Publication.CEC2020.RW{n}"
+            module_name = f"Benchmark.CEC2020.RW{n}"
             class_name = f"RW{n}"
             module = importlib.import_module(module_name)
             cls = getattr(module, class_name)
@@ -48,7 +47,7 @@ def get_functions(class_name):
         n = 12
         # for n in [11, 10, 4, 5, 1, 2, 3, 6, 7, 8, 9, 12]:
         for n in range(1, 1 + n):
-            module_name = f"Benchmark.Publication.CEC2022.F{n}"
+            module_name = f"Benchmark.CEC2022.F{n}"
             class_name = f"F{n}"
             module = importlib.import_module(module_name)
             cls = getattr(module, class_name)
@@ -75,7 +74,8 @@ def file_management(function, dimension, size, domain, class_name, directory):
         dimension = function.max_dimension
 
     os.makedirs(os.getcwd() + '/' + directory, exist_ok=True)
-    file_path = os.getcwd() + "/Tests/InitialsData/" + class_name + '_' + function_name + "_" + str(
+
+    file_path = os.getcwd() + "/../Benchmark/InitialsData/" + class_name + '_' + function_name + "_" + str(
         dimension) + "x" + str(size) + "_.json"
     initials = None
     if os.path.exists(file_path):
@@ -99,7 +99,6 @@ def get_algorithm_instance(m, iteration, pop_size, window_length, seed):
             sort_flag=True,
             seed=seed
         ),
-
 
         'BKA': BKA(
             epoch=iteration,
@@ -129,15 +128,6 @@ def get_algorithm_instance(m, iteration, pop_size, window_length, seed):
 
         'ABC': ABC.OriginalABC(epoch=iteration, pop_size=pop_size, n_limits=50,
                                seed=seed),
-
-        'CCEO': MealpyCCE(
-            epoch=iteration,
-            pop_size=pop_size,
-            window_length=window_length,
-            save_population=True,
-            sort_flag=True,
-            seed=seed
-        ),
 
         'NIADE': NIADE(
             epoch=iteration,

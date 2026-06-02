@@ -1,4 +1,4 @@
-from Benchmark.Functions.__Function import Function
+from Benchmark.__Function import Function
 import numpy as np
 import os
 

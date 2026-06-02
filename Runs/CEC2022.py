@@ -14,19 +14,19 @@ models = [
 ]
 
 models = [
-    'DE', 'SADE'
+    'DE'
 ]
 
-for dimension in [20]:
-    fn_class = 'CEC2022'
-    nb_opti = 30
+for dimension in [50]:
+    fn_class = 'CEC2020RW'
+    nb_opti = 1
     generation = 100  # Nombre de génération
     pop_size = 50  # Taille de la population
     window_length = 5
     # ======================================================== #
 
-    directory = '_dim' + str(dimension) + '_opti' + str(nb_opti) + '_it' + str(generation)
-    directory = datetime.now().strftime("Tests/NOAH/" + fn_class + "/%Y%m%d%H%M%S_" + directory + '/')
+    directory = 'dim' + str(dimension) + '_opti' + str(nb_opti) + '_it' + str(generation)
+    directory = datetime.now().strftime("../Optimizations/" + fn_class + "/%Y%m%d%H%M%S_" + directory + '/')
     functions = utils.get_functions(fn_class)
     print('---------------------------------------')
     print('Optimisation for', len(functions), 'functions')

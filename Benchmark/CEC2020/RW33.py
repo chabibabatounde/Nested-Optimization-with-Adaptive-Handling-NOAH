@@ -1,4 +1,4 @@
-from Benchmark.Functions.__Function import Function
+from Benchmark.__Function import Function
 import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
