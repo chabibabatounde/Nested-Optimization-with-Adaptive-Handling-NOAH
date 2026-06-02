@@ -6,26 +6,23 @@ from Utils import utils
 import numpy as np
 from matplotlib import pyplot as plt
 
-models = ['GA', 'PSO', 'DE', 'SADE', 'GWO', 'WarSO', 'NIADE', 'CGO', 'SOA', 'NOAH']
-# ABC
-
 models = [
     'NOAH',
-    'GA', 'PSO', 'ABC',
-    'GWO', 'WarSO', 'WOA',
-    'NIADE', 'BKA', 'CGO', 'SOA'
+    'DOA', 'CGO', 'SADE', 'WarSO',
+    'CCCO', 'GWO', 'GA', 'WOA',
+    'SOA', 'PSO', 'NIADE', 'DBO'
 ]
 
-for dimension in [10, 50, 100]:
+for dimension in [100, 50, 500]:
     fn_class = 'CEC2017'
     nb_opti = 30
-    generation = 100  # Nombre de génération
+    generation = 500  # Nombre de génération
     pop_size = 50  # Taille de la population
     window_length = 5
-    # ========================================================== #
+    # ======================================================== #
 
-    directory = '_dim' + str(dimension) + '_opti' + str(nb_opti) + '_it' + str(generation)
-    directory = datetime.now().strftime("Tests/NOAH/" + fn_class + "/%Y%m%d%H%M%S_" + directory + '/')
+    directory = 'dim' + str(dimension) + '_opti' + str(nb_opti) + '_it' + str(generation)
+    directory = datetime.now().strftime("../Optimizations/" + fn_class + "/%Y%m%d%H%M%S_" + directory + '/')
     functions = utils.get_functions(fn_class)
     print('---------------------------------------')
     print('Optimisation for', len(functions), 'functions')

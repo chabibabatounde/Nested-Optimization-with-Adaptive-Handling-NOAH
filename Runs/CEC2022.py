@@ -8,19 +8,15 @@ from matplotlib import pyplot as plt
 
 models = [
     'NOAH',
-    'GA', 'PSO', 'ABC',
-    'GWO', 'WarSO', 'WOA',
-    'NIADE', 'BKA', 'CGO', 'SOA'
+    'DOA', 'CGO', 'SADE', 'WarSO',
+    'CCCO', 'GWO', 'GA', 'WOA',
+    'SOA', 'PSO', 'NIADE', 'DBO'
 ]
 
-models = [
-    'DE'
-]
-
-for dimension in [50]:
-    fn_class = 'CEC2020RW'
-    nb_opti = 1
-    generation = 100  # Nombre de génération
+for dimension in [20, 10]:
+    fn_class = 'CEC2022'
+    nb_opti = 30
+    generation = 500  # Nombre de génération
     pop_size = 50  # Taille de la population
     window_length = 5
     # ======================================================== #
