@@ -2,7 +2,7 @@ import json
 import time
 from datetime import datetime
 from mealpy import FloatVar
-from Utils import utils
+import utils
 import numpy as np
 from matplotlib import pyplot as plt
 

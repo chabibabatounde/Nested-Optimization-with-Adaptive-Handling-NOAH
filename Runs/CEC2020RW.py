@@ -2,12 +2,13 @@ import json
 import time
 from datetime import datetime
 from mealpy import FloatVar
-from Utils import utils
+import utils
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 models = [
-    'DOA', 'DE', 'CCCO', 'SADE',  'DBO', 'BKA'
+    'CCCO', 'SADE', 'GA', 'DBO', 'NOAH'
 ]
 
 for dimension in ["X"]:

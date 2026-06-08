@@ -2,26 +2,20 @@ import json
 import time
 from datetime import datetime
 from mealpy import FloatVar
-from Utils import utils
+import utils
 import numpy as np
 from matplotlib import pyplot as plt
 
-models = ['GA', 'PSO', 'DE', 'SADE', 'GWO', 'WarSO', 'NIADE', 'CGO', 'SOA', 'NOAH']
-# ABC
 
 models = [
+    'PSO', 'GA', 'SADE',
+    'GWO', 'WOA', 'WarSO',
+    'DOA', 'CCCO', 'NIADE',
+    'DBO', 'SOA', 'BKA',
     'NOAH',
-    'GA', 'PSO', 'ABC',
-    'GWO', 'WarSO', 'WOA',
-    'NIADE', 'BKA', 'CGO', 'SOA'
 ]
 
-
-models = [
-    'NOAH', 'CGO'
-]
-
-for dimension in [100]:
+for dimension in [30]:
     fn_class = 'CEC2017'
     nb_opti = 30
     generation = 100  # Nombre de génération
@@ -42,7 +36,9 @@ for dimension in [100]:
         counter += 1
         fn = function(dimension)
         domain = fn.domain()
-        initial_data = utils.file_management(fn, dimension, pop_size, domain, fn_class, directory)
+        initial_data, dimension = utils.file_management(fn, dimension, pop_size, domain, fn_class, directory)
+        fn = function(dimension)
+        domain = fn.domain()
         print('Optimisation', str(counter) + '/' + str(len(functions)), 'for', fn.name(), 'in D = ', dimension)
         optimizations[fn.name()] = {}
         data_sum[fn.name()] = dict()

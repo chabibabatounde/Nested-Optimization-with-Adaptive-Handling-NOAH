@@ -2,27 +2,29 @@ import json
 import time
 from datetime import datetime
 from mealpy import FloatVar
-from Utils import utils
+import utils
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 models = [
+    'PSO', 'GA', 'SADE',
+    'GWO', 'WOA', 'WarSO',
+    'DOA', 'CCCO', 'NIADE',
+    'DBO', 'SOA', 'BKA',
     'NOAH',
-    'DOA', 'CGO', 'SADE', 'WarSO',
-    'CCCO', 'GWO', 'GA', 'WOA',
-    'SOA', 'PSO', 'NIADE', 'DBO'
 ]
 
-for dimension in [100, 50, 500]:
+for dimension in [30]:
     fn_class = 'CEC2017'
     nb_opti = 30
-    generation = 500  # Nombre de génération
+    generation = 100  # Nombre de génération
     pop_size = 50  # Taille de la population
     window_length = 5
-    # ======================================================== #
+    # ========================================================== #
 
-    directory = 'dim' + str(dimension) + '_opti' + str(nb_opti) + '_it' + str(generation)
-    directory = datetime.now().strftime("../Optimizations/" + fn_class + "/%Y%m%d%H%M%S_" + directory + '/')
+    directory = '_dim' + str(dimension) + '_opti' + str(nb_opti) + '_it' + str(generation)
+    directory = datetime.now().strftime("Tests/NOAH/" + fn_class + "/%Y%m%d%H%M%S_" + directory + '/')
     functions = utils.get_functions(fn_class)
     print('---------------------------------------')
     print('Optimisation for', len(functions), 'functions')
@@ -34,7 +36,9 @@ for dimension in [100, 50, 500]:
         counter += 1
         fn = function(dimension)
         domain = fn.domain()
-        initial_data = utils.file_management(fn, dimension, pop_size, domain, fn_class, directory)
+        initial_data, dimension = utils.file_management(fn, dimension, pop_size, domain, fn_class, directory)
+        fn = function(dimension)
+        domain = fn.domain()
         print('Optimisation', str(counter) + '/' + str(len(functions)), 'for', fn.name(), 'in D = ', dimension)
         optimizations[fn.name()] = {}
         data_sum[fn.name()] = dict()

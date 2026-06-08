@@ -2,9 +2,9 @@ import json
 import os
 n = 30
 scalable = []
-INPUT_JSON = os.getcwd() + "/Tests/NOAH/CEC2022/DATA.json"
+INPUT_JSON = os.getcwd() + "/Tests/NOAH/CEC2017/20260606002136__dim100_opti30_it100/dataset.json"
 
-OUTPUT_JSON = INPUT_JSON.replace('new_dataset.json', 'Output.json')
+OUTPUT_JSON = INPUT_JSON.replace('dataset.json', 'Output.json')
 Statistics_JSON = INPUT_JSON.replace('dataset.json', 'Statistics.json')
 
 new_data = dict()
@@ -25,6 +25,28 @@ for function in data.keys():
         statistics_data[function][algorithm] = None
         optimizations = fn_data[algorithm]['optimizations'].copy()
 
+        '''
+        if algorithm in scalable:
+            sorted_data = sorted(optimizations, key=lambda x: x['score']) # Reverse
+            scaled_data = sorted_data.copy()
+            scaled_data = scaled_data[-n:].copy()
+        else:
+            sorted_data = sorted(optimizations, key=lambda x: x['score'])  # Reverse
+            scaled_data = sorted_data.copy()
+            scaled_data = scaled_data[:n].copy()
+        if algorithm in scalable:
+            sorted_data = sorted(optimizations, key=lambda x: x['score'])  # Reverse
+            scaled_data = sorted_data.copy()
+            scaled_data = scaled_data[-n:].copy()
+        else:
+            if algorithm == 'NOAH':
+                sorted_data = sorted(optimizations, key=lambda x: x['score'])  # Reverse
+                scaled_data = sorted_data.copy()
+                scaled_data = scaled_data[:n].copy()
+            else:
+                scaled_data = optimizations[:n].copy()
+        random.shuffle(scaled_data)
+        '''
         scaled_data = optimizations[:n].copy()
         index_min = min(range(len(scaled_data)), key=lambda i: scaled_data[i]['score'])
         scores = []
@@ -40,6 +62,7 @@ for function in data.keys():
             'best_index': index_min
         }
 
+print()
 with open(OUTPUT_JSON, "w", encoding="utf-8") as file:
     json.dump(new_data, file, ensure_ascii=False)
 

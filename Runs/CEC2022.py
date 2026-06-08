@@ -2,28 +2,24 @@ import json
 import time
 from datetime import datetime
 from mealpy import FloatVar
-from Utils import utils
+from Utils.utils import *
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 models = [
-    'NOAH',
-    'DOA', 'CGO', 'SADE', 'WarSO',
-    'CCCO', 'GWO', 'GA', 'WOA',
-    'SOA', 'PSO', 'NIADE', 'DBO'
+    'NOAH', 'DBO'
 ]
 
-for dimension in [20, 10]:
+for dimension in [10]:
     fn_class = 'CEC2022'
-    nb_opti = 30
-    generation = 500  # Nombre de génération
-    pop_size = 50  # Taille de la population
-    window_length = 5
-    # ======================================================== #
-
-    directory = 'dim' + str(dimension) + '_opti' + str(nb_opti) + '_it' + str(generation)
-    directory = datetime.now().strftime("../Optimizations/" + fn_class + "/%Y%m%d%H%M%S_" + directory + '/')
-    functions = utils.get_functions(fn_class)
+    nb_opti = 1
+    generation = 10
+    pop_size = 50
+    # ========================================================== #
+    directory = '_dim' + str(dimension) + '_opti' + str(nb_opti) + '_it' + str(generation)
+    directory = datetime.now().strftime("Tests/" + fn_class + "/%Y%m%d%H%M%S_" + directory + '/')
+    functions = get_functions(fn_class)
     print('---------------------------------------')
     print('Optimisation for', len(functions), 'functions')
     print('---------------------------------------\n')
@@ -34,7 +30,9 @@ for dimension in [20, 10]:
         counter += 1
         fn = function(dimension)
         domain = fn.domain()
-        initial_data = utils.file_management(fn, dimension, pop_size, domain, fn_class, directory)
+        initial_data, dimension = file_management(fn, dimension, pop_size, domain, fn_class, directory)
+        fn = function(dimension)
+        domain = fn.domain()
         print('Optimisation', str(counter) + '/' + str(len(functions)), 'for', fn.name(), 'in D = ', dimension)
         optimizations[fn.name()] = {}
         data_sum[fn.name()] = dict()
@@ -49,7 +47,7 @@ for dimension in [20, 10]:
             optimizations[fn.name()][m] = {'optimizations': []}
             for i in range(nb_opti):
                 seed = i
-                algorithm = utils.get_algorithm_instance(
+                algorithm = get_algorithm_instance(
                     m,
                     generation,
                     pop_size,

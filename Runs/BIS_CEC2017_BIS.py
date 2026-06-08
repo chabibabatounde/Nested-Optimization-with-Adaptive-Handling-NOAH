@@ -2,23 +2,21 @@ import json
 import time
 from datetime import datetime
 from mealpy import FloatVar
-from Utils import utils
+import utils
 import numpy as np
 from matplotlib import pyplot as plt
 
-models = ['GA', 'PSO',  'DE', 'SADE', 'GWO', 'WarSO', 'NIADE', 'CGO', 'SOA', 'NOAH']
-models = ['NOAH', 'DE']
 
 models = [
+    'PSO', 'GA', 'SADE',
+    'GWO', 'WOA', 'WarSO',
+    'DOA', 'CCCO', 'NIADE',
+    'DBO', 'SOA', 'BKA',
     'NOAH',
-    'GA', 'PSO', 'WOA',
-    'GWO', 'WarSO',
-    'NIADE', 'BKA', 'CGO', 'SOA'
 ]
 
-
-for dimension in ["X"]:
-    fn_class = 'CEC2020RW'
+for dimension in [50]:
+    fn_class = 'CEC2017'
     nb_opti = 30
     generation = 100  # Nombre de génération
     pop_size = 50  # Taille de la population
@@ -36,14 +34,12 @@ for dimension in ["X"]:
     counter = 0
     for function in functions:
         counter += 1
-        f = function(1)
-        dim = f.max_dimension
-        dimension = dim
-        fn = function(dim)
+        fn = function(dimension)
         domain = fn.domain()
-        fn = function(dim)
-        initial_data = utils.file_management(fn, dim, pop_size, domain, fn_class, directory)
-        print('Optimisation', str(counter) + '/' + str(len(functions)), 'for', fn.name(), 'in D = ', dim)
+        initial_data, dimension = utils.file_management(fn, dimension, pop_size, domain, fn_class, directory)
+        fn = function(dimension)
+        domain = fn.domain()
+        print('Optimisation', str(counter) + '/' + str(len(functions)), 'for', fn.name(), 'in D = ', dimension)
         optimizations[fn.name()] = {}
         data_sum[fn.name()] = dict()
         scorus = {}
@@ -64,10 +60,12 @@ for dimension in ["X"]:
                     window_length,
                     seed
                 )
+
                 lb = [b[0] for b in domain]
                 ub = [b[1] for b in domain]
+
                 problem = {
-                    "obj_func": fn.eval, "minmax": "min", "log_to": None, "target": fn.optimum() * dim,
+                    "obj_func": fn.eval, "minmax": "min", "log_to": None, "target": fn.optimum() * dimension,
                     "bounds": FloatVar(lb=lb, ub=ub),
                 }
                 start_time = time.perf_counter()
@@ -85,12 +83,12 @@ for dimension in ["X"]:
                     pops = [debut] + algorithm.history.pops
                 for element in list(algorithm.history.list_current_best_fit):
                     data.append(element)
-                    if element == fn.optimum() * dim:
+                    if element == fn.optimum() * dimension:
                         break
                 result = {
                     'score': min(data),
                     'scores_evolution': data,
-                    'optimum': fn.optimum() * dim,
+                    'optimum': fn.optimum() * dimension,
                     'ax': ax,
                     'iteration': len(data),
                     'value': algorithm.g_best.solution.tolist(),

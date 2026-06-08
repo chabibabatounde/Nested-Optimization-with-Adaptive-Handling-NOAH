@@ -1,39 +1,26 @@
-'''
-
 import json
 import os
 
 import numpy as np
 import pandas as pd
-from scipy.stats import friedmanchisquare, wilcoxon
+import scipy.stats as stats
 import scikit_posthocs as sp
-import matplotlib.pyplot as plt
 import seaborn as sns
-from itertools import combinations
-
-# =========================
-# 1. LOAD DATA
-# =========================
-
-INPUT_JSON = os.getcwd() + "/Tests/NOAH/CEC2022/20260530020113__dim20_opti50_it100/Statistics.json"
-INPUT_JSON = os.getcwd() + "/Tests/NOAH/CEC2020RW/20260530020113__dimX_opti30_it100/Statistics.json"
-INPUT_JSON = os.getcwd() + "/Tests/NOAH/CEC2022/20260531150310__dim20_opti30_it100/Statistics.json"
-
-with open(INPUT_JSON, "r") as f:
-    data = json.load(f)
-'''
-import json
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.stats import friedmanchisquare, wilcoxon, rankdata
-import scikit_posthocs as sp
-import os
 
-# ============================================================
-# 1. Charger les données
-# ============================================================
-INPUT_JSON = os.getcwd() + "/Tests/NOAH/CEC2022/STATS_DATASET.json"
+# =========================
+# PARAMETERS
+# =========================
+cllass = 'CEC2017'
+Dim = '30'
+
+SPLIT_CEC = True
+N_SPLITS = 2
+
+# =========================
+# Load JSON
+# =========================
+INPUT_JSON = os.getcwd() + '/Tests/Optimizations_data/' + cllass + '/Dim_' + Dim + '_Statistics.json'
 
 with open(INPUT_JSON, "r") as f:
     data = json.load(f)
@@ -41,128 +28,157 @@ with open(INPUT_JSON, "r") as f:
 functions = list(data.keys())
 algorithms = list(data[functions[0]].keys())
 
-df = pd.DataFrame(index=functions, columns=algorithms, dtype=float)
+# =========================
+# Build mean performance matrix
+# =========================
+mean_scores = pd.DataFrame(index=functions, columns=algorithms)
+
 for f in functions:
     for algo in algorithms:
-        df.loc[f, algo] = np.mean(data[f][algo]["scores"])
+        scores = data[f][algo]["scores"]
+        mean_scores.loc[f, algo] = np.mean(scores)
 
-print("=== Scores moyens par fonction ===")
-print(df)
+mean_scores = mean_scores.astype(float)
 
-# ============================================================
-# 2. Friedman test + Mean Ranking
-# ============================================================
-ranks = df.apply(lambda row: rankdata(row.values), axis=1, result_type="expand")
-ranks.columns = df.columns
-mean_ranks = ranks.mean(axis=0).sort_values()
+# =========================
+# ANALYSIS FUNCTION
+# =========================
+def run_analysis(sub_functions, suffix=""):
 
-print("\n=== Friedman Mean Ranking ===")
-print(mean_ranks)
+    sub_mean_scores = mean_scores.loc[sub_functions]
 
-stat, p_value = friedmanchisquare(*[df[a].values for a in algorithms])
-print(f"\nFriedman statistic = {stat:.4f}, p-value = {p_value:.6f}")
+    # =========================
+    # Friedman test
+    # =========================
+    friedman_stat, friedman_p = stats.friedmanchisquare(
+        *[sub_mean_scores[algo] for algo in algorithms]
+    )
 
-# ➜ Référence = meilleur algo selon Friedman (rang moyen le plus faible)
-reference = mean_ranks.index[0]
-print(f"\n>>> Algorithme de référence (1er du classement) : {reference}")
+    print(f"\n[{suffix}] Friedman statistic:", friedman_stat)
+    print(f"[{suffix}] p-value:", friedman_p)
 
-# ============================================================
-# 3. Test post-hoc de Nemenyi
-# ============================================================
-nemenyi = sp.posthoc_nemenyi_friedman(df.values)
-nemenyi.index = algorithms
-nemenyi.columns = algorithms
-print("\n=== Nemenyi pairwise p-values ===")
-print(nemenyi.round(4))
+    # =========================
+    # Compute ranks
+    # =========================
+    ranks = sub_mean_scores.rank(axis=1, method='average', ascending=True)
+    mean_ranks = ranks.mean().sort_values()
 
-# ============================================================
-# 4. Wilcoxon signed-rank test (référence vs autres)
-# ============================================================
-wilcoxon_results = []
-plus_total, equal_total, minus_total = 0, 0, 0
-alpha = 0.05
+    print(f"\n[{suffix}] Mean ranks:")
+    print(mean_ranks)
 
-for algo in algorithms:
-    if algo == reference:
-        continue
-    x = df[reference].values
-    y = df[algo].values
-    try:
-        stat_w, p_w = wilcoxon(x, y)
-    except ValueError:
-        stat_w, p_w = np.nan, 1.0
+    # =========================
+    # Plot mean ranks
+    # =========================
+    plt.figure(figsize=(10, 5))
+    sns.barplot(x=mean_ranks.values, y=mean_ranks.index, palette="viridis")
+    plt.title(f"Friedman Mean Ranking {suffix}")
+    plt.xlabel("Average Rank (lower is better)")
+    plt.ylabel("Algorithms")
+    plt.tight_layout()
+    plt.savefig(INPUT_JSON.replace('.json', f'_ranking{suffix}.png'))
+    plt.close()
 
-    # + : référence meilleure significativement
-    # - : référence pire significativement
-    # = : non significatif
-    if p_w < alpha:
-        if np.mean(x) < np.mean(y):
-            sign = "+"; plus_total += 1
-        else:
-            sign = "-"; minus_total += 1
-    else:
-        sign = "="; equal_total += 1
+    # =========================
+    # Nemenyi test
+    # =========================
+    nemenyi = sp.posthoc_nemenyi_friedman(sub_mean_scores.values)
+    nemenyi.index = algorithms
+    nemenyi.columns = algorithms
 
-    wilcoxon_results.append({
-        "Algorithme": algo,
-        "Statistique W": round(stat_w, 4) if not np.isnan(stat_w) else "NA",
-        "p-value": round(p_w, 6),
-        f"Signe ({reference} vs autre)": sign
-    })
+    print(f"\n[{suffix}] Nemenyi p-values:")
+    print(nemenyi)
 
-wilcoxon_df = pd.DataFrame(wilcoxon_results)
-overall = f"{plus_total}/{equal_total}/{minus_total}"
-print(f"\n=== Wilcoxon signed-rank test (référence = {reference}) ===")
-print(wilcoxon_df.to_string(index=False))
-print(f"\nOverall (+/=/-): {overall}")
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(nemenyi, annot=True, cmap="coolwarm", fmt=".3f")
+    plt.title(f"Nemenyi Test {suffix}")
+    plt.tight_layout()
+    plt.savefig(INPUT_JSON.replace('.json', f'_heatmap{suffix}.png'))
+    plt.close()
 
-# ============================================================
-# 5. Figure résumé du classement
-# ============================================================
-fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    # =========================
+    # Boxplot
+    # =========================
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(data=sub_mean_scores, orient="h")
+    plt.title(f"Algorithm Performance {suffix}")
+    plt.xlabel("Score")
+    plt.ylabel("Algorithms")
+    plt.tight_layout()
+    plt.savefig(INPUT_JSON.replace('.json', f'_boxplot{suffix}.png'))
+    plt.close()
 
-# (a) Bar plot des rangs moyens — référence mise en évidence
-colors = []
-for algo in mean_ranks.index:
-    colors.append("#d62728" if algo == reference else "#4c72b0")
+    # =========================
+    # Radar plot
+    # =========================
+    radar_data = ranks.copy()
 
-axes[0].barh(mean_ranks.index, mean_ranks.values, color=colors, edgecolor="black")
-axes[0].invert_yaxis()
-axes[0].set_xlabel("Rang moyen (Friedman)")
-axes[0].set_title(f"Classement Friedman\n(p-value = {p_value:.2e}) — Référence : {reference}")
-for i, v in enumerate(mean_ranks.values):
-    axes[0].text(v + 0.05, i, f"{v:.2f}", va="center", fontweight="bold")
-axes[0].grid(axis="x", linestyle="--", alpha=0.6)
+    labels = sub_functions
+    num_vars = len(labels)
 
-# (b) Heatmap Nemenyi
-nemenyi_sorted = nemenyi.loc[mean_ranks.index, mean_ranks.index]
-im = axes[1].imshow(nemenyi_sorted.values, cmap="RdYlGn_r", vmin=0, vmax=0.1, aspect="auto")
-axes[1].set_xticks(range(len(algorithms)))
-axes[1].set_yticks(range(len(algorithms)))
-axes[1].set_xticklabels(nemenyi_sorted.columns, rotation=45, ha="right")
-axes[1].set_yticklabels(nemenyi_sorted.index)
-axes[1].set_title("Nemenyi - p-values\n(rouge = significatif, p<0.05)")
-for i in range(len(algorithms)):
-    for j in range(len(algorithms)):
-        val = nemenyi_sorted.values[i, j]
-        axes[1].text(j, i, f"{val:.2f}", ha="center", va="center",
-                     color="black", fontsize=8)
-plt.colorbar(im, ax=axes[1], label="p-value")
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+    angles += angles[:1]
 
-plt.suptitle(f"Analyse statistique — Overall {reference} vs autres (+/=/-): {overall}",
-             fontsize=14, fontweight="bold")
-plt.tight_layout()
-plt.savefig("statistical_analysis.png", dpi=150, bbox_inches="tight")
-plt.show()
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
 
-# ============================================================
-# 6. Export résultats
-# ============================================================
-with pd.ExcelWriter("statistical_results.xlsx") as writer:
-    df.to_excel(writer, sheet_name="Scores_moyens")
-    ranks.to_excel(writer, sheet_name="Rangs")
-    mean_ranks.to_frame("Rang_moyen").to_excel(writer, sheet_name="Friedman_ranking")
-    nemenyi.to_excel(writer, sheet_name="Nemenyi")
-    wilcoxon_df.to_excel(writer, sheet_name="Wilcoxon", index=False)
+    markers = ['o', 's', '^', 'D', 'v', 'P', '*', 'X']
+    linestyles = ['-', '--', '-.', ':']
+    palette = sns.color_palette("tab10", len(algorithms))
 
-print("\n✅ Résultats exportés : statistical_results.xlsx + statistical_analysis.png")
+    for i, algo in enumerate(algorithms):
+        values = radar_data[algo].values.tolist()
+        values += values[:1]
+
+        marker = None
+        linestyle = None
+        color = palette[i]
+        linewidth = 1
+
+        # Highlight NOAH
+        if algo.upper() == 'NOAH':
+            marker = 'o'
+            linestyle = '-.'
+            color = 'red'
+            linewidth = 1.5
+
+        ax.plot(
+            angles,
+            values,
+            linewidth=linewidth,
+            label=algo,
+            marker=marker,
+            linestyle=linestyle,
+            color=color
+        )
+
+        ax.fill(angles, values, alpha=0.05, color=color)
+
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(labels, fontsize=8)
+
+    ax.set_ylim(len(algorithms), 1)
+
+    ax.set_title(f"Radar Plot (Ranks) {suffix}", size=14)
+
+    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+
+    plt.tight_layout()
+    plt.savefig(INPUT_JSON.replace('.json', f'_radar{suffix}.png'))
+    plt.close()
+
+
+# =========================
+# SPLIT LOGIC
+# =========================
+if cllass == 'CEC2020RW' and SPLIT_CEC:
+    split_size = int(np.ceil(len(functions) / N_SPLITS))
+
+    for i in range(N_SPLITS):
+        sub_functions = functions[i * split_size:(i + 1) * split_size]
+        run_analysis(sub_functions, suffix=f"_part{i+1}")
+elif cllass == 'CEC2017' and SPLIT_CEC:
+    split_size = int(np.ceil(len(functions) / N_SPLITS))
+    for i in range(N_SPLITS):
+        sub_functions = functions[i * split_size:(i + 1) * split_size]
+        run_analysis(sub_functions, suffix=f"_part{i + 1}")
+else:
+    run_analysis(functions)
