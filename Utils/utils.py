@@ -90,12 +90,16 @@ def file_management(function, dimension, size, domain, class_name, directory):
     return initials, dimension
 
 
-def get_algorithm_instance(m, iteration, pop_size, window_length, seed):
+def get_algorithm_instance(m, iteration, pop_size, seed, p_levy, levy_k, alpha_max):
     models = {
         'NOAH': Noah(
             epoch=iteration,
             pop_size=pop_size,
-            window_length=window_length,
+
+            p_levy = p_levy,
+            levy_k = levy_k,
+            alpha_max = alpha_max,
+
             save_population=True,
             sort_flag=True,
             seed=seed

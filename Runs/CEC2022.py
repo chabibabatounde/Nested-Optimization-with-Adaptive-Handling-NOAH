@@ -6,15 +6,19 @@ from Utils.utils import *
 import numpy as np
 from matplotlib import pyplot as plt
 
+p_levy =  0.4 # 0.5
+levy_k = 4 # [1, 2, 3, 4, 5]
+alpha_max = 0.4
 
 models = [
-    'NOAH', 'DBO'
+    'NOAH'
 ]
 
-for dimension in [10]:
+
+for dimension in [20]:
     fn_class = 'CEC2022'
-    nb_opti = 1
-    generation = 10
+    nb_opti = 30
+    generation = 100
     pop_size = 50
     # ========================================================== #
     directory = '_dim' + str(dimension) + '_opti' + str(nb_opti) + '_it' + str(generation)
@@ -51,8 +55,10 @@ for dimension in [10]:
                     m,
                     generation,
                     pop_size,
-                    window_length,
-                    seed
+                    seed,
+                    p_levy,
+                    levy_k,
+                    alpha_max
                 )
 
                 lb = [b[0] for b in domain]
